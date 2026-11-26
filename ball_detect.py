@@ -35,6 +35,8 @@ PRESETS = {
     "green":  [((40, 70, 50), (85, 255, 255))],
     "blue":   [((95, 120, 50), (130, 255, 255))],
     "pink":   [((140, 80, 80), (170, 255, 255))],
+    # White = any hue, low saturation, high brightness
+    "white":  [((0, 0, 180), (179, 50, 255))],
 }
 
 MIN_RADIUS_PX = 10        # ignore tiny blobs
@@ -69,6 +71,8 @@ def ranges_from_pixel(hsv, x, y, h_tol=10, s_tol=60, v_tol=60):
     """Sample a small patch around (x, y) and build an HSV range around it."""
     patch = hsv[max(y - 3, 0):y + 4, max(x - 3, 0):x + 4].reshape(-1, 3)
     h, s, v = np.median(patch, axis=0).astype(int)
+    if s < 50:  # white / grey object: hue is meaningless, match on low saturation + brightness
+        return [((0, 0, max(v - v_tol, 0)), (179, min(s + 40, 255), 255))]
     s_lo, s_hi = max(s - s_tol, 50), 255
     v_lo, v_hi = max(v - v_tol, 40), 255
     lo_h, hi_h = h - h_tol, h + h_tol
